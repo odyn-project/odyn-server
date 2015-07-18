@@ -72,10 +72,6 @@ type Resource interface {
 
     Type() ResourceType
 
-    // Get the resource's full URI, such as
-    // "https://cloud.odyn.io/device/Leela/Toaster"
-    URI() string
-
     // Reload all properties.  Existing Property objects will be orphaned.
     Refresh() (error)
 
