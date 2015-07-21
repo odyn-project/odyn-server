@@ -39,8 +39,8 @@ package fs
 //                  "value" : "leela@PlanetExpress.com"
 //              }
 //              "password" : {
-//                  ":datatype" : "string",
-//                  "value" : "leela@PlanetExpress.com"
+//                  ":datatype" : "password",
+//                  "value" : "zXdt5d4ug78jige"
 //              }
 //          }
 //      }
@@ -52,20 +52,60 @@ package fs
 //          2fe4651e-fec5-474f-84b4-0792bbe0382a
 //
 
-type FsDal struct {
+type FsBackend struct {
+    odynDir string
 }
 
-type FsResource struct {
-    path string
+type FsConnection struct {
+    backend FsBackend
 }
 
-func (dal *FsDal) Connect() (Connection, error) {
+func (backend *FsBackend) Connect() (Connection, error) {
+    // Nothing needs to be done to connect
+    return &FsConnection{
+        backend
+    }, nil
 }
 
-func (res *FsResource) Path() string {
-    return res.path
+func (backend *FsBackend) Erase() error {
+    // The (+ "/data") prevents misconfiguration from wiping the whole
+    // filesystem.
+    return os.RemoveAll(backend.odynDir + "/data")
 }
 
-func (res *FsResource) Path() string {
-    return res.path
+func (backend *FsBackend) Prep() error {
+    // No prep needed.
+    return nil
+}
+
+func (backend *FsBackend) Migrate(start, end string) error {
+    return fmt.Errorf("No migration support for filesystem db")
+}
+
+func (conn *FsConnection) Close() {
+    // Nothing needs to be done
+}
+
+func (conn *FsConnection) DeleteResource(path string) {
+    // Lookup the UUID
+
+    // Delete the document file
+
+    // Delete the lookup file
+}
+
+func LoadResource(path string) (Resource, error) {
+    // Lookup the UUID
+
+    // Read the document file
+    
+    // Convert the JSON contents into a dal.Resource object.
+}
+
+func SaveResource(path string) (Resource, error) {
+    // Lookup the UUID
+
+    // Read the document file
+    
+    // Convert the JSON contents into a dal.Resource object.
 }

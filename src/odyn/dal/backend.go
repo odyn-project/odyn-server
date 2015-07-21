@@ -16,14 +16,14 @@ package dal
 
 // Backend interface.  Database backends must implement this interface.
 
-type DB interface {
+type DBBackend interface {
     Connect() (DBConnection, error)
 
     Erase() error
 
     Prep() error
 
-    Migrate(startVersion, endVersion)
+    Migrate(startVersion, endVersion string) error
 }
 
 type DBConnection interface {
