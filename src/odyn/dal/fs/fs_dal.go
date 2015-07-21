@@ -13,11 +13,14 @@
 // limitations under the License.
 
 package fs
-
 // Filesystem backend for DAL
 //
 // This backend is dependency-free and relatively high performance, but
 // non-scalable.
+
+import (
+     code.google.com/p/go-uuid/uuid
+)
 
 // Resources are stored as directories on the local filesystem, keyed by
 // internal UUID.
@@ -58,12 +61,14 @@ type FsBackend struct {
 
 type FsConnection struct {
     backend FsBackend
+    dataDir string
 }
 
 func (backend *FsBackend) Connect() (Connection, error) {
     // Nothing needs to be done to connect
     return &FsConnection{
         backend
+        backend.odynDir + "/data"
     }, nil
 }
 
@@ -86,26 +91,126 @@ func (conn *FsConnection) Close() {
     // Nothing needs to be done
 }
 
-func (conn *FsConnection) DeleteResource(path string) {
-    // Lookup the UUID
+func (conn *FsConnection) createUUID(path string) (string, error) {
+    // Generate random UUID
+    id := uuid.New()
 
-    // Delete the document file
+    // MkdirAll for path
+    err := os.MkdirAll(conn.dataDir + "/" + path, 0644)
+    if err != nil {
+        return "", err
+    }
+
+    // Write UUID to __uuid file for path
+    filename := conn.dataDir + "/" + path + "/__uuid"
+    err = ioutil.WriteFile(filename, id, 0644)
+    if err != nil {
+        return "", err
+    }
+
+    return id, nil
+}
+
+func (conn *FsConnection) lookupUUID(path string) (string, error) {
+    // Read UUID from path file
+    buf, err := ioutil.ReadFile(conn.dataDir + path + "/__uuid")
+    if (err != nil) {
+        return "", err
+    }
+    s := string(buf)
+
+    // verify that it resembles uuid
+    if len(s) != 36 {
+        return "", fmt.Errorf(conn.dataDir + path + 
+                "/__uuid file contents is not a UUID")
+    }
+
+    return s
+}
+
+func (conn *FsConnection) lookupOrCreateUUID(path string) (string, error) {
+    id, err := conn.lookupUUID()
+    if err == nil {
+        return id, nil
+    }
+
+    id, err := conn.createUUID()
+    if err == nil {
+        return id, nil
+    }
+
+    return "", err
+}
+
+func (conn *FsConnection) DeleteResource(path string) error {
+    // Lookup the UUID
+    id, err := conn.lookupUUID(path)
+    if err != nil {
+        return err
+    }
+
+    // Delete the document file & directory
+    err = os.RemoveAll(conn.dataDir + path)
+    if err != nil {
+        return err
+    }
 
     // Delete the lookup file
+    err = os.RemoveAll(conn.dataDir + "/res/" + id)
+    if err != nil {
+        return err
+    }
 }
 
-func LoadResource(path string) (Resource, error) {
+func (conn *FsConnection)LoadResource(path string) (Resource, error) {
     // Lookup the UUID
+    id, err := conn.lookupUUID(path)
+    if err != nil {
+        return nil, err
+    }
 
     // Read the document file
+    buf, err := ioutil.ReadFile(conn.dataDir + "/res/" + id + "/__doc")
+    if (err != nil) {
+        return nil, err
+    }
+
+    // Parse the JSON
+    var doc map[string]interface{}
+    decoder := json.NewDecoder(strings.NewReader(buf))
+    err := decoder.Decode(&doc)
+    if err != nil {
+        return nil, err
+    }
     
     // Convert the JSON contents into a dal.Resource object.
+    err = dal.ResourceFromJson(doc)
+    if err != nil {
+        return nil, err
+    }
+
 }
 
-func SaveResource(path string) (Resource, error) {
+func (conn *FsConnection)SaveResource(path string, res Resource) (error) {
     // Lookup the UUID
+    id, err := conn.lookupUUID(path)
+    if err != nil {
+        // UUID not found for this resource.  Create it.
+        id, err := conn.createUUID(path)
+        if err != nil {
+            return err
+        }
+    }
 
-    // Read the document file
-    
-    // Convert the JSON contents into a dal.Resource object.
+    // Get JSON object from dal.Resource object.
+    jsonBytes = res.JsonBytes()
+
+    // Save to document file
+    filename := conn.dataDir + "/res/" + id + "/__doc"
+    err = ioutil.WriteFile(filename, jsonBytes, 0644)
+    if err != nil {
+        return err
+    }
+
+    return nil
 }

@@ -14,7 +14,7 @@
 
 package dal
 
-// Backend interface.  Database backends must implement this interface.
+// StorageEngine interface.  Database backends must implement this interface.
 
 type DBBackend interface {
     Connect() (DBConnection, error)
@@ -33,5 +33,6 @@ type DBConnection interface {
 
     LoadResource(path string) (Resource, error)
 
+    // Create or update a resource
     SaveResource(path string, res Resource) (error)
 }
