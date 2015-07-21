@@ -12,12 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package dal
+package storage
+
+import (
+    "odyn/dal"
+)
 
 // StorageEngine interface.  Database backends must implement this interface.
-
-type DBBackend interface {
-    Connect() (DBConnection, error)
+type StorageEngine interface {
+    Connect() (StorageConnection, error)
 
     Erase() error
 
@@ -26,13 +29,13 @@ type DBBackend interface {
     Migrate(startVersion, endVersion string) error
 }
 
-type DBConnection interface {
+type StorageConnection interface {
     Close()
 
     DeleteResource(path string) error
 
-    LoadResource(path string) (Resource, error)
+    LoadResource(path string) (dal.Resource, error)
 
     // Create or update a resource
-    SaveResource(path string, res Resource) (error)
+    SaveResource(path string, res dal.Resource) (error)
 }
