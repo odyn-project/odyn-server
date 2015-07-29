@@ -44,4 +44,4 @@ type Resource interface {
 
     // Write all modified properties to the database
     Save() (error)
-}
+
