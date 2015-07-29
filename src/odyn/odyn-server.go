@@ -14,6 +14,10 @@
 
 package main
 
+import (
+    "odyn/log"
+)
+
 func main() {
     log.Init("/var/log/odyn/server.log")
 }

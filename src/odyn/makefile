@@ -1,20 +1,18 @@
-#
-# Copyright 2014 Gregory Prisament
+# Copyright 2015 Odyn Authors (see AUTHORS file for project)
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
+#    http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-#
 
-TARGETS := build/canopy-server build/canopy-ops
+TARGETS := build/odyn-server
 
 .PHONY: all
 .DEFAULT: all
@@ -22,7 +20,7 @@ all: $(TARGETS)
 
 .PHONY: $(TARGETS)
 
-build/canopy-server:
+build/odyn-server:
 	mkdir -p ~/.odyn/golang
 	GOPATH=$$(cd ~/.odyn/golang; pwd):$$(cd ../../; pwd) go build -ldflags "-X main.buildVersion `cat VERSION` -X main.buildDate `date -u +%Y-%m-%d.%H:%M:%S` -X main.buildCommit `git rev-parse HEAD || echo unknown`" odyn-server.go
 	mkdir -p build/
@@ -55,9 +53,9 @@ install:
 
 .PHONY: update
 update:
-	-/etc/init.d/canopy-server stop
-	cp $(TARGETS) /usr/local/bin
-	-/etc/init.d/canopy-server start
+#-/etc/init.d/canopy-server stop
+#	cp $(TARGETS) /usr/local/bin
+#	-/etc/init.d/canopy-server start
 
 .PHONY: clean
 clean:

@@ -33,7 +33,7 @@ var std = OdynLogger{}
 
 // If /var/log/canopy files cannot be opened, then fallback to just logging to STDOUT
 func initFallback() error {
-    std.infoLogger = log.New(os.Stdout, "", log.LstdFlags | log.Lshortfile)
+    std.logger = log.New(os.Stdout, "", log.LstdFlags | log.Lshortfile)
     std.errorLogger = log.New(os.Stdout, "ERROR ", log.LstdFlags | log.Lshortfile)
     std.warnLogger = log.New(os.Stdout, "WARN ", log.LstdFlags | log.Lshortfile)
 
@@ -49,7 +49,7 @@ func Init(logFilename string) error {
         fmt.Println("Falling back to STDOUT for logging")
         return initFallback()
     }
-    std.infoLogger = log.New(std.logFile, "", log.LstdFlags | log.Lshortfile)
+    std.logger = log.New(std.logFile, "", log.LstdFlags | log.Lshortfile)
 
     std.errorLogger = log.New(std.logFile, "ERROR ", log.LstdFlags | log.Lshortfile)
     std.warnLogger = log.New(std.logFile, "WARN ", log.LstdFlags | log.Lshortfile)
@@ -59,7 +59,7 @@ func Init(logFilename string) error {
 
 // Close Odyn log file
 func Shutdown() {
-    std.infoLogger.Output(2, fmt.Sprintln("Goodbye"));
+    std.logger.Output(2, fmt.Sprintln("Goodbye"));
     if (std.logFile != nil) {
         std.logFile.Close()
     }
@@ -81,5 +81,5 @@ func Warn(v ...interface{}) {
 
 // Log an information statement
 func Info(v ...interface{}) {
-    std.infoLogger.Output(2, fmt.Sprintln(v...))
+    std.logger.Output(2, fmt.Sprintln(v...))
 }
