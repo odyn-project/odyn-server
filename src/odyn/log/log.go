@@ -17,9 +17,10 @@
 package log
 
 import (
+    "fmt"
     "log"
     "os"
-    "fmt"
+    "path"
 )
 
 type OdynLogger struct {
@@ -42,8 +43,16 @@ func initFallback() error {
 
 // Initialize Odyn logger
 func Init(logFilename string) error {
-    var err error
-    std.logFile, err = os.OpenFile(logFilename, os.O_RDWR | os.O_CREATE | os.O_APPEND, 0666);
+
+    // Create parent directory if needed
+    err := os.MkdirAll(path.Dir(logFilename), 0644)
+    if err != nil {
+        fmt.Println("Error opening file " + logFilename + ": ", err)
+        fmt.Println("Falling back to STDOUT for logging")
+        return initFallback()
+    }
+
+    std.logFile, err = os.OpenFile(logFilename, os.O_RDWR | os.O_CREATE | os.O_APPEND, 0644);
     if err != nil {
         fmt.Println("Error opening file " + logFilename + ": ", err)
         fmt.Println("Falling back to STDOUT for logging")
