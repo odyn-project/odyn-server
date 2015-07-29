@@ -24,13 +24,12 @@ import (
      "encoding/json"
      "fmt"
      "io/ioutil"
-     "odyn/dal"
      "odyn/storage"
      "os"
      "strings"
 )
 
-// Resources are stored as directories on the local filesystem, keyed by
+// Documents are stored as directories on the local filesystem, keyed by
 // internal UUID.
 //
 //      /var/odyn-server/data/res/UUID/
@@ -56,7 +55,7 @@ import (
 //          }
 //      }
 //
-// Resource paths contain directories & files with the UUID lookup
+// Document paths contain directories & files with the UUID lookup
 //
 //      /var/odyn-server/data/device/Leela/Toaster/__uuid
 //
@@ -154,7 +153,7 @@ func (conn *FsConnection) lookupOrCreateUUID(path string) (string, error) {
     return "", err
 }
 
-func (conn *FsConnection) DeleteResource(path string) error {
+func (conn *FsConnection) DeleteDocument(path string) error {
     // Lookup the UUID
     id, err := conn.lookupUUID(path)
     if err != nil {
@@ -176,7 +175,7 @@ func (conn *FsConnection) DeleteResource(path string) error {
     return nil
 }
 
-func (conn *FsConnection)LoadResource(path string) (dal.Resource, error) {
+func (conn *FsConnection)LoadDocument(path string) (interface{}, error) {
     // Lookup the UUID
     id, err := conn.lookupUUID(path)
     if err != nil {
@@ -197,17 +196,11 @@ func (conn *FsConnection)LoadResource(path string) (dal.Resource, error) {
         return nil, err
     }
     
-    // Convert the JSON contents into a dal.Resource object.
-    res, err := dal.ResourceFromJson(doc)
-    if err != nil {
-        return nil, err
-    }
-
-    return res, nil
+    return doc, nil
 
 }
 
-func (conn *FsConnection)SaveResource(path string, res dal.Resource) (error) {
+func (conn *FsConnection)SaveDocument(path string, doc interface{}) (error) {
     var id string
     var err error
 
@@ -221,8 +214,11 @@ func (conn *FsConnection)SaveResource(path string, res dal.Resource) (error) {
         }
     }
 
-    // Get JSON object from dal.Resource object.
-    jsonBytes := res.JsonBytes()
+    // Serialize to JSON
+    jsonBytes, err := json.MarshalIndent(doc, "", "    ")
+    if err != nil {
+        return err
+    }
 
     // Save to document file
     filename := conn.dataDir + "/res/" + id + "/__doc"

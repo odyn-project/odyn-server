@@ -22,7 +22,6 @@ import (
 func main() {
     log.Init("/var/log/odyn/server.log")
 
-
     // Test storage engine
     engine := fs.NewEngine("/var/lib/odyn")
     err := engine.Prep()

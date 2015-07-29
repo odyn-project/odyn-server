@@ -15,9 +15,10 @@
 package storage
 
 // Storage interface.  Database backends must implement the interfaces below.
+//
+// Documents are JSON-encodable objects.
 
 import (
-    "odyn/dal"
 )
 
 // Storage Engine interface.
@@ -35,10 +36,9 @@ type Engine interface {
 type Connection interface {
     Close()
 
-    DeleteResource(path string) error
+    DeleteDocument(path string) error
 
-    LoadResource(path string) (dal.Resource, error)
+    LoadDocument(path string) (interface{}, error)
 
-    // Create or update a resource
-    SaveResource(path string, res dal.Resource) (error)
+    SaveDocument(path string, doc interface{}) (error)
 }

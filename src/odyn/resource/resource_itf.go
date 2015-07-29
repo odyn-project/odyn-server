@@ -14,6 +14,17 @@
 
 package resource
 
+type PropDatatype int
+const (
+    DATATYPE_FLOAT32 = iota
+)
+
+
+type PropVal struct {
+    datatype PropDatatype
+    value interface{}
+}
+
 type Property interface {
     Attribute(attr string) (PropVal, error)
 
@@ -37,11 +48,9 @@ type Resource interface {
     // Get a property of the resource by name
     Property(name string) (Property, error)
 
-    Type() ResourceType
-
     // Reload all properties.  Existing Property objects will be orphaned.
     Refresh() (error)
 
     // Write all modified properties to the database
     Save() (error)
-
+}

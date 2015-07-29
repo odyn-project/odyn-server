@@ -14,6 +14,11 @@
 
 package resource
 
+import (
+    "fmt"
+     "odyn/storage"
+)
+
 type GenericResource struct {
     conn storage.Connection
     json map[string]interface{}
@@ -30,14 +35,16 @@ func (res *GenericResource) StorageConnection() storage.Connection {
 }
 
 // Get a property of the resource by name
-func (res *GenericResource) Property(name) (*Property, error) {
-    propJson, ok := res.json[name].(map[string]interface)
+func (res *GenericResource) Property(name string) (*Property, error) {
+    _, ok := res.json[name].(map[string]interface{})
     if !ok {
         return nil, fmt.Errorf("Resource '%s' property '%s' not found.", 
                 name, res.Path())
     }
 
-    return jsonToProperty(propJson)
+    // TODO
+    return nil, fmt.Errorf("Not implemented")
+    //return jsonToProperty(propJson)
 }
 
 func ResourceFromJson(json map[string]interface{}) (Resource, error) {
