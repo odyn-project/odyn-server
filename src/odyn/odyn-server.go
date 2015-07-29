@@ -24,12 +24,18 @@ func main() {
 
 
     // Test storage engine
-    conn, err := fs.NewEngine("/var/odyn/").Connect()
+    engine := fs.NewEngine("/var/lib/odyn")
+    err := engine.Prep()
+    if err != nil {
+        log.Error(err)
+        return
+    }
+
+    conn, err := engine.Connect()
     if err != nil {
         log.Error(err)
         return
     }
 
     conn.Close()
-
 }

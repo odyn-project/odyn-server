@@ -12,33 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package storage
+package resource
 
-// Storage interface.  Database backends must implement the interfaces below.
-
-import (
-    "odyn/dal"
-)
-
-// Storage Engine interface.
-type Engine interface {
-    Connect() (Connection, error)
-
-    Erase() error
-
-    Prep() error
-
-    Migrate(startVersion, endVersion string) error
-}
-
-// Storage Connection interface for saving and loading resources.
-type Connection interface {
-    Close()
-
-    DeleteResource(path string) error
-
-    LoadResource(path string) (dal.Resource, error)
-
-    // Create or update a resource
-    SaveResource(path string, res dal.Resource) (error)
+type Property struct {
 }
