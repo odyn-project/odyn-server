@@ -13,13 +13,21 @@
 // limitations under the License.
 
 package fs
-// Filesystem backend for DAL
+
+// Filesystem storage engine
 //
-// This backend is dependency-free and relatively high performance, but
+// This storage backend is dependency-free and relatively high performance, but
 // non-scalable.
 
 import (
-     code.google.com/p/go-uuid/uuid
+     "code.google.com/p/go-uuid/uuid"
+     "encoding/json"
+     "fmt"
+     "io/ioutil"
+     "odyn/dal"
+     "odyn/storage"
+     "os"
+     "strings"
 )
 
 // Resources are stored as directories on the local filesystem, keyed by
@@ -55,35 +63,39 @@ import (
 //          2fe4651e-fec5-474f-84b4-0792bbe0382a
 //
 
-type FsBackend struct {
+// Internal structure for Filesystem Storage Engine.
+// Implements storage.Engine
+type FsEngine struct {
     odynDir string
 }
 
+// Internal structure for Filesystem Storage Connection.
+// Implements storage.Connection
 type FsConnection struct {
-    backend FsBackend
+    engine *FsEngine
     dataDir string
 }
 
-func (backend *FsBackend) Connect() (Connection, error) {
+func (engine *FsEngine) Connect() (storage.Connection, error) {
     // Nothing needs to be done to connect
     return &FsConnection{
-        backend
-        backend.odynDir + "/data"
+        engine,
+        engine.odynDir + "/data",
     }, nil
 }
 
-func (backend *FsBackend) Erase() error {
+func (engine *FsEngine) Erase() error {
     // The (+ "/data") prevents misconfiguration from wiping the whole
     // filesystem.
-    return os.RemoveAll(backend.odynDir + "/data")
+    return os.RemoveAll(engine.odynDir + "/data")
 }
 
-func (backend *FsBackend) Prep() error {
+func (engine *FsEngine) Prep() error {
     // No prep needed.
     return nil
 }
 
-func (backend *FsBackend) Migrate(start, end string) error {
+func (engine *FsEngine) Migrate(start, end string) error {
     return fmt.Errorf("No migration support for filesystem db")
 }
 
@@ -103,7 +115,7 @@ func (conn *FsConnection) createUUID(path string) (string, error) {
 
     // Write UUID to __uuid file for path
     filename := conn.dataDir + "/" + path + "/__uuid"
-    err = ioutil.WriteFile(filename, id, 0644)
+    err = ioutil.WriteFile(filename, []byte(id), 0644)
     if err != nil {
         return "", err
     }
@@ -125,16 +137,16 @@ func (conn *FsConnection) lookupUUID(path string) (string, error) {
                 "/__uuid file contents is not a UUID")
     }
 
-    return s
+    return s, nil
 }
 
 func (conn *FsConnection) lookupOrCreateUUID(path string) (string, error) {
-    id, err := conn.lookupUUID()
+    id, err := conn.lookupUUID(path)
     if err == nil {
         return id, nil
     }
 
-    id, err := conn.createUUID()
+    id, err = conn.createUUID(path)
     if err == nil {
         return id, nil
     }
@@ -160,9 +172,11 @@ func (conn *FsConnection) DeleteResource(path string) error {
     if err != nil {
         return err
     }
+
+    return nil
 }
 
-func (conn *FsConnection)LoadResource(path string) (Resource, error) {
+func (conn *FsConnection)LoadResource(path string) (dal.Resource, error) {
     // Lookup the UUID
     id, err := conn.lookupUUID(path)
     if err != nil {
@@ -177,33 +191,38 @@ func (conn *FsConnection)LoadResource(path string) (Resource, error) {
 
     // Parse the JSON
     var doc map[string]interface{}
-    decoder := json.NewDecoder(strings.NewReader(buf))
-    err := decoder.Decode(&doc)
+    decoder := json.NewDecoder(strings.NewReader(string(buf)))
+    err = decoder.Decode(&doc)
     if err != nil {
         return nil, err
     }
     
     // Convert the JSON contents into a dal.Resource object.
-    err = dal.ResourceFromJson(doc)
+    res, err := dal.ResourceFromJson(doc)
     if err != nil {
         return nil, err
     }
 
+    return res, nil
+
 }
 
-func (conn *FsConnection)SaveResource(path string, res Resource) (error) {
+func (conn *FsConnection)SaveResource(path string, res dal.Resource) (error) {
+    var id string
+    var err error
+
     // Lookup the UUID
-    id, err := conn.lookupUUID(path)
+    id, err = conn.lookupUUID(path)
     if err != nil {
         // UUID not found for this resource.  Create it.
-        id, err := conn.createUUID(path)
+        id, err = conn.createUUID(path)
         if err != nil {
             return err
         }
     }
 
     // Get JSON object from dal.Resource object.
-    jsonBytes = res.JsonBytes()
+    jsonBytes := res.JsonBytes()
 
     // Save to document file
     filename := conn.dataDir + "/res/" + id + "/__doc"
@@ -213,4 +232,12 @@ func (conn *FsConnection)SaveResource(path string, res Resource) (error) {
     }
 
     return nil
+}
+
+// Initialize a new Filesystem Storage Engine object that uses <storageDir> for
+// data storage.
+func NewEngine(storageDir string) storage.Engine {
+    return &FsEngine{
+        odynDir : storageDir,
+    }
 }

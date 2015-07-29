@@ -16,6 +16,10 @@ package dal
 
 // Data Abstraction Layer
 
+import (
+    "fmt"
+)
+
 type ResourceType int
 const (
     UnknownResource = iota
@@ -26,6 +30,11 @@ const (
     TeamResource
     UserResource
 )
+
+type PropDatatype int
+
+type PropVal struct {
+}
 
 type DAL interface {
     Connect() (Connection, error)
@@ -64,6 +73,8 @@ type Property interface {
 }
 
 type Resource interface {
+    JsonBytes() []byte
+
     // Get the resource's path, such as "device/Leela/Toaster"
     Path() string
 
@@ -77,4 +88,9 @@ type Resource interface {
 
     // Write all modified properties to the database
     Save() (error)
+}
+
+func ResourceFromJson(json map[string]interface{}) (Resource, error) {
+    // TODO implement
+    return nil, fmt.Errorf("Not implemented")
 }

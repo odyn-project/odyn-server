@@ -29,6 +29,7 @@ build/odyn-server:
 .PHONY: go_get_deps
 go_get_deps:
 	mkdir -p ~/.odyn/golang
+	GOPATH=$$(cd ~/.odyn/golang; pwd):$$(cd ../../; pwd) go get code.google.com/p/go-uuid/uuid
 	GOPATH=$$(cd ~/.odyn/golang; pwd):$$(cd ../../; pwd) go get code.google.com/p/go.net/websocket
 	GOPATH=$$(cd ~/.odyn/golang; pwd):$$(cd ../../; pwd) go get github.com/gocql/gocql
 	GOPATH=$$(cd ~/.odyn/golang; pwd):$$(cd ../../; pwd) go get github.com/gorilla/sessions

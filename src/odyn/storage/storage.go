@@ -18,9 +18,9 @@ import (
     "odyn/dal"
 )
 
-// StorageEngine interface.  Database backends must implement this interface.
-type StorageEngine interface {
-    Connect() (StorageConnection, error)
+// Storage Engine interface.  Database backends must implement this interface.
+type Engine interface {
+    Connect() (Connection, error)
 
     Erase() error
 
@@ -29,7 +29,9 @@ type StorageEngine interface {
     Migrate(startVersion, endVersion string) error
 }
 
-type StorageConnection interface {
+// Storage Connection interface for saving and loading resources.  Database
+// backends must implement this interface as well.
+type Connection interface {
     Close()
 
     DeleteResource(path string) error

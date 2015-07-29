@@ -16,8 +16,20 @@ package main
 
 import (
     "odyn/log"
+    "odyn/storage/fs"
 )
 
 func main() {
     log.Init("/var/log/odyn/server.log")
+
+
+    // Test storage engine
+    conn, err := fs.NewEngine("/var/odyn/").Connect()
+    if err != nil {
+        log.Error(err)
+        return
+    }
+
+    conn.Close()
+
 }
