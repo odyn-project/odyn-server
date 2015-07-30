@@ -15,12 +15,18 @@
 package main
 
 import (
+    "net/http"
     "odyn/log"
     "odyn/storage/fs"
+    "odyn/webserver"
 )
 
 func main() {
     log.Init("/var/log/odyn/server.log")
+
+    // Spin up webserver
+    rootMux := http.NewServeMux()
+    webserver.Launcher.StartHTTPServer(":80", rootMux)
 
     // Test storage engine
     engine := fs.NewEngine("/var/lib/odyn")
