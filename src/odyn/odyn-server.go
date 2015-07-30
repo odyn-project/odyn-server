@@ -22,15 +22,17 @@ import (
 )
 
 func main() {
+    var err error
     log.Init("/var/log/odyn/server.log")
 
     // Spin up webserver
     rootMux := http.NewServeMux()
-    webserver.Launcher.StartHTTPServer(":80", rootMux)
+    launcher := webserver.NewLauncher()
+    launcher.StartHTTPServer(":8080", rootMux)
 
     // Test storage engine
     engine := fs.NewEngine("/var/lib/odyn")
-    err := engine.Prep()
+    err = engine.Prep()
     if err != nil {
         log.Error(err)
         return
@@ -43,4 +45,7 @@ func main() {
     }
 
     conn.Close()
+
+    err = launcher.WaitForComplete()
+    log.Info(err.Error())
 }

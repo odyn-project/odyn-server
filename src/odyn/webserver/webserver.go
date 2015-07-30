@@ -48,7 +48,7 @@ type WebserverObj struct {
     resultChans [](chan error)
 }
 
-func (server WebserverObj) StartHTTPServer(host string, handler http.Handler) {
+func (server *WebserverObj) StartHTTPServer(host string, handler http.Handler) {
     resultChan := make(chan error)
     server.resultChans = append(server.resultChans, resultChan)
     go func() {
@@ -58,10 +58,11 @@ func (server WebserverObj) StartHTTPServer(host string, handler http.Handler) {
         }
         err := srv.ListenAndServe()
         resultChan <- err
+        close(resultChan)
     }()
 }
 
-func (server WebserverObj)StartHTTPSServer(host, certFile, privKeyFile string, 
+func (server *WebserverObj)StartHTTPSServer(host, certFile, privKeyFile string, 
         handler http.Handler) {
 
     resultChan := make(chan error)
@@ -73,10 +74,11 @@ func (server WebserverObj)StartHTTPSServer(host, certFile, privKeyFile string,
         }
         err := srv.ListenAndServeTLS(certFile, privKeyFile)
         resultChan <- err
+        close(resultChan)
     }()
 }
 
-func (server WebserverObj)WaitForComplete() error {
+func (server *WebserverObj)WaitForComplete() error {
     cases := make([]reflect.SelectCase, len(server.resultChans))
     for i, ch := range server.resultChans {
         cases[i] = reflect.SelectCase{
@@ -88,4 +90,6 @@ func (server WebserverObj)WaitForComplete() error {
     return value.Interface().(error)
 }
 
-var Launcher Webserver = &WebserverObj{}
+func NewLauncher() Webserver {
+    return &WebserverObj{[](chan error){}}
+}
